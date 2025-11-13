@@ -135,21 +135,24 @@ app.post('/setup-gmail-watch', async (req, res) => {
     }
 
     // Environment variables kontrolü
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    // iOS Client ID kullan (token iOS'tan geldiği için)
+    const iosClientId = process.env.GOOGLE_IOS_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const webClientSecret = process.env.GOOGLE_CLIENT_SECRET;
     
-    console.log('🔍 GOOGLE_CLIENT_ID:', clientId ? `${clientId.substring(0, 20)}...` : 'YOK!');
-    console.log('🔍 GOOGLE_CLIENT_SECRET:', clientSecret ? `${clientSecret.substring(0, 10)}...` : 'YOK!');
+    console.log('🔍 GOOGLE_IOS_CLIENT_ID:', iosClientId ? `${iosClientId.substring(0, 20)}...` : 'YOK!');
+    console.log('🔍 GOOGLE_CLIENT_SECRET:', webClientSecret ? `${webClientSecret.substring(0, 10)}...` : 'YOK!');
     
-    if (!clientId || !clientSecret) {
-      console.error('❌ GOOGLE_CLIENT_ID veya GOOGLE_CLIENT_SECRET eksik!');
+    if (!iosClientId || !webClientSecret) {
+      console.error('❌ GOOGLE_IOS_CLIENT_ID veya GOOGLE_CLIENT_SECRET eksik!');
       return res.status(500).json({ error: 'Google OAuth credentials eksik' });
     }
 
-    // OAuth2 client oluştur
+    // OAuth2 client oluştur - iOS Client ID kullan (token iOS'tan geldiği için)
+    // Ama Web Application Client Secret gerekli (Gmail Watch için)
+    // NOT: Refresh token iOS Client ID ile oluşturuldu, bu yüzden iOS Client ID kullanmalıyız
     const oauth2Client = new google.auth.OAuth2(
-      clientId,
-      clientSecret
+      iosClientId,  // iOS Client ID (token bu ID ile oluşturuldu)
+      webClientSecret  // Web Application Secret (Gmail API için gerekli)
     );
     
     oauth2Client.setCredentials({

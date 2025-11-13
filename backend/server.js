@@ -147,17 +147,19 @@ app.post('/setup-gmail-watch', async (req, res) => {
       return res.status(500).json({ error: 'Google OAuth credentials eksik' });
     }
 
-    // OAuth2 client oluştur - iOS Client ID kullan (token iOS'tan geldiği için)
-    // Ama Web Application Client Secret gerekli (Gmail Watch için)
-    // NOT: Refresh token iOS Client ID ile oluşturuldu, bu yüzden iOS Client ID kullanmalıyız
+    // OAuth2 client oluştur
+    // NOT: iOS Client ID ile oluşturulmuş token'ı Web Application Client ID ile refresh edemeyiz
+    // Bu yüzden sadece mevcut access token'ı kullanıyoruz, refresh yapmıyoruz
+    // Token expire olursa iOS uygulaması kendisi refresh edecek
     const oauth2Client = new google.auth.OAuth2(
       iosClientId,  // iOS Client ID (token bu ID ile oluşturuldu)
       webClientSecret  // Web Application Secret (Gmail API için gerekli)
     );
     
+    // Sadece access token kullan, refresh token'ı kullanma (client ID uyumsuzluğu nedeniyle)
     oauth2Client.setCredentials({
-      access_token: accessToken,
-      refresh_token: refreshToken
+      access_token: accessToken
+      // refresh_token kullanmıyoruz - iOS uygulaması kendisi refresh edecek
     });
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });

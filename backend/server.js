@@ -134,10 +134,22 @@ app.post('/setup-gmail-watch', async (req, res) => {
       return res.status(400).json({ error: 'Email ve accessToken gerekli' });
     }
 
+    // Environment variables kontrolü
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    
+    console.log('🔍 GOOGLE_CLIENT_ID:', clientId ? `${clientId.substring(0, 20)}...` : 'YOK!');
+    console.log('🔍 GOOGLE_CLIENT_SECRET:', clientSecret ? `${clientSecret.substring(0, 10)}...` : 'YOK!');
+    
+    if (!clientId || !clientSecret) {
+      console.error('❌ GOOGLE_CLIENT_ID veya GOOGLE_CLIENT_SECRET eksik!');
+      return res.status(500).json({ error: 'Google OAuth credentials eksik' });
+    }
+
     // OAuth2 client oluştur
     const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET
+      clientId,
+      clientSecret
     );
     
     oauth2Client.setCredentials({
@@ -167,6 +179,10 @@ app.post('/setup-gmail-watch', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Gmail watch hatası:', error);
+    console.error('❌ Hata detayı:', JSON.stringify(error, null, 2));
+    if (error.response) {
+      console.error('❌ Response data:', error.response.data);
+    }
     res.status(500).json({ error: error.message });
   }
 });
